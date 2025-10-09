@@ -21,7 +21,7 @@ npm install
 ### 2. Start the Development Server
 
 ```
-npm start
+npm run dev
 ```
 
 This starts the app locally, usually at [http://localhost:3000](http://localhost:3000).
@@ -29,7 +29,7 @@ This starts the app locally, usually at [http://localhost:3000](http://localhost
 ### 3. Run Tests
 
 ```
-npm test
+npm run test
 ```
 
 ## Usage
