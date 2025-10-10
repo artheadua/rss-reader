@@ -43,6 +43,10 @@ export default function RSSReaderView() {
         return fItems;
     }, [selectedFeed, sortDirection]);
 
+    const postProcessContent = (content: string) => {
+        return content.replace(new RegExp(searchQuery, 'gi'), (match) => `<mark>${match}</mark>`)
+    }
+
     const filteredFeedItems = useMemo(() => {
         return sortedFeedItems.filter((feedItem) => filterByFavorite ? localStorage.getItem(feedItem.link) : true)
             .filter((feedItem) =>
@@ -53,12 +57,16 @@ export default function RSSReaderView() {
                 feedItem['content:encodedSnippet']?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 feedItem['content:encoded']?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 feedItem.content?.toLowerCase().includes(searchQuery.toLowerCase())
-            )
+            ).map((feedItem) => ({
+                ...feedItem,
+                title: postProcessContent(feedItem.title),
+                contentSnippet: postProcessContent(feedItem.contentSnippet || ''),
+                summary: postProcessContent(feedItem.summary || ''),
+                content: postProcessContent(feedItem['content:encodedSnippet'] || feedItem.summary || feedItem.contentSnippet || ''),
+            }))
     }, [sortedFeedItems, searchQuery, filterByFavorite])
 
-    const postProcessContent = (content: string) => {
-        return content.replace(new RegExp(searchQuery, 'gi'), (match) => `<mark>${match}</mark>`)
-    }
+
 
     return (
         <div className="flex flex-col gap-4">
@@ -94,8 +102,8 @@ export default function RSSReaderView() {
                         {feeds.length === 0 ? <div>No feeds, go ahead and add one</div> : feeds.map((feed) => (
                             <li key={feed.id}
                                 style={{
-                                    backgroundColor: selectedFeed?.id === feed.id ? '#007bff' : 'white',
-                                    color: selectedFeed?.id === feed.id ? 'white' : 'black',
+                                    backgroundColor: selectedFeed?.id === feed.id ? '#007bff' : 'unset',
+                                    color: selectedFeed?.id === feed.id ? 'white' : 'unset',
                                     cursor: 'pointer',
                                     display: 'flex',
                                     justifyContent: 'space-between',
@@ -138,7 +146,6 @@ export default function RSSReaderView() {
                             {filteredFeedItems.map((feedItem) => (
                                 <li key={feedItem.link}
                                     style={{
-                                        backgroundColor: 'white',
                                         cursor: 'pointer',
                                         display: 'flex',
                                     }}
@@ -153,7 +160,7 @@ export default function RSSReaderView() {
                                             <div className="flex flex-col">
                                                 <div onClick={() => {
                                                     navigate(`/feed/${encodeURIComponent(feedItem.link)}`)
-                                                }} className="title" dangerouslySetInnerHTML={{ __html: postProcessContent(feedItem.title) }}></div>
+                                                }} className="title" dangerouslySetInnerHTML={{ __html: feedItem.title }}></div>
                                                 <div className="date">{format(new Date(feedItem.pubDate || ''), 'MMM d, yyyy')}
                                                     <span className="bookmark" onClick={() => {
                                                         dispatch(bookMarkFeedItem({ feedItem: feedItem, favorite: !localStorage.getItem(feedItem.link) }))
@@ -163,7 +170,7 @@ export default function RSSReaderView() {
                                             </div>
                                             <div className="content" onClick={() => {
                                                 navigate(`/feed/${encodeURIComponent(feedItem.link)}`)
-                                            }} dangerouslySetInnerHTML={{ __html: postProcessContent(feedItem['content:encodedSnippet'] || feedItem.summary || feedItem.contentSnippet || '') }}></div>
+                                            }} dangerouslySetInnerHTML={{ __html: feedItem['content:encodedSnippet'] || feedItem.summary || feedItem.contentSnippet || '' }}></div>
                                         </div>
                                     </div>
                                 </li>

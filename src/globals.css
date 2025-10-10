@@ -5,6 +5,17 @@ body {
   font-size: 12px;
 }
 
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #121212;
+    color: #fff;
+  }
+  li {
+    background-color: #121212;
+    color: #fff;
+  }
+}
+
 
 h2 {
   margin-bottom: 10px;
@@ -75,7 +86,6 @@ ul {
 li {
   padding: 10px;
   border-radius: 5px;
-  background-color: #f0f0f0;
 }
 
 img {
