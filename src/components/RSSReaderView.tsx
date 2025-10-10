@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux"
 import { useNavigate } from "react-router-dom"
 import { FaSortAlphaDown, FaSortAlphaUp, FaSpinner, FaPlus, FaBookmark, FaRegBookmark, FaTrash } from "react-icons/fa";
 import { SortDirection } from "../types"
-import { format } from "date-fns"
+import FeedItemComponent from "./FeedItem"
 
 export default function RSSReaderView() {
     const dispatch = useDispatch()
@@ -66,6 +66,22 @@ export default function RSSReaderView() {
             }))
     }, [sortedFeedItems, searchQuery, filterByFavorite])
 
+    const handleAddFeed = () => {
+        const url = prompt('Enter feed url')
+        try {
+            const urlObject = new URL(url || '')
+        } catch (error) {
+            alert('Please enter a valid feed url')
+            return
+        }
+        dispatch(addFeed({
+            id: Date.now().toString(),
+            name: '...',
+            url: url || '',
+            feedItems: []
+        }))
+    }
+
 
 
     return (
@@ -80,24 +96,12 @@ export default function RSSReaderView() {
                 </div>
             </div>
             <div className="flex gap-4 flex-wrap">
-                <div>
+                <div style={{
+                    minWidth: '250px'
+                }}>
                     <div className="flex justify-between">
-                        <h2>Feeds</h2><button type="button" onClick={() => {
-                            // prompt for channel name and url
-                            const url = prompt('Enter feed url')
-                            try {
-                                const urlObject = new URL(url || '')
-                            } catch (error) {
-                                alert('Please enter a valid feed url')
-                                return
-                            }
-                            dispatch(addFeed({
-                                id: Date.now().toString(),
-                                name: '...',
-                                url: url || '',
-                                feedItems: []
-                            }))
-                        }}><FaPlus /> Add</button></div>
+                        <h2>Feeds</h2><button type="button" onClick={handleAddFeed}><FaPlus /> Add</button>
+                    </div>
                     <ul>
                         {feeds.length === 0 ? <div>No feeds, go ahead and add one</div> : feeds.map((feed) => (
                             <li key={feed.id}
@@ -105,11 +109,9 @@ export default function RSSReaderView() {
                                     backgroundColor: selectedFeed?.id === feed.id ? '#007bff' : 'unset',
                                     color: selectedFeed?.id === feed.id ? 'white' : 'unset',
                                     cursor: 'pointer',
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
                                     alignItems: 'baseline'
                                 }}
-                                className="feed-item"
+                                className="feed-item flex justify-between"
                                 onClick={() => {
                                     dispatch(setSelectedFeed(feed))
                                 }}>{feed.name}
@@ -150,29 +152,12 @@ export default function RSSReaderView() {
                                         display: 'flex',
                                     }}
                                 >
-                                    <div className="flex">
-                                        <div className="flex gap-2">
-                                            {feedItem.imageUrl && <img src={feedItem.imageUrl} alt={feedItem.title} className="preview" onClick={() => {
-                                                navigate(`/feed/${encodeURIComponent(feedItem.link)}`)
-                                            }} />}
-                                        </div>
-                                        <div className="flex flex-wrap">
-                                            <div className="flex flex-col">
-                                                <div onClick={() => {
-                                                    navigate(`/feed/${encodeURIComponent(feedItem.link)}`)
-                                                }} className="title" dangerouslySetInnerHTML={{ __html: feedItem.title }}></div>
-                                                <div className="date">{format(new Date(feedItem.pubDate || ''), 'MMM d, yyyy')}
-                                                    <span className="bookmark" onClick={() => {
-                                                        dispatch(bookMarkFeedItem({ feedItem: feedItem, favorite: !localStorage.getItem(feedItem.link) }))
-                                                    }}>{localStorage.getItem(feedItem.link) ? <FaBookmark /> : <FaRegBookmark />}</span>
-                                                </div>
-
-                                            </div>
-                                            <div className="content" onClick={() => {
-                                                navigate(`/feed/${encodeURIComponent(feedItem.link)}`)
-                                            }} dangerouslySetInnerHTML={{ __html: feedItem['content:encodedSnippet'] || feedItem.summary || feedItem.contentSnippet || '' }}></div>
-                                        </div>
-                                    </div>
+                                    <FeedItemComponent
+                                        feedItem={feedItem}
+                                        navigate={navigate}
+                                        dispatch={dispatch}
+                                        bookMarkFeedItem={bookMarkFeedItem}
+                                    />
                                 </li>
                             ))}
                         </ul>
